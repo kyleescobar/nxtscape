@@ -1,6 +1,7 @@
+use std::error::Error;
+use std::panic::catch_unwind;
 use std::thread;
 use simple_logger::SimpleLogger;
-use winapi::shared::minwindef::{DWORD, HMODULE, LPVOID};
 use winapi::um::consoleapi::AllocConsole;
 
 fn open_console() {
@@ -9,25 +10,25 @@ fn open_console() {
     log::info!("Opened client debug console.");
 }
 
-fn bootstrap() {
+fn init() -> Result<(), Box<dyn Error>> {
     /*
      * We open the debugging console during development.
      * Its best if this line is commented out before creating a client
      * which will be used for distribution.
      */
-    println!("Loool");
     open_console();
 
-    println!("Does this work!");
+    Ok(())
 }
 
-#[no_mangle]
-pub extern "system" fn DllMain(_h_module: HMODULE, dw_reason: DWORD, _lp_reserved: LPVOID) -> bool {
-    match dw_reason {
-        1u32 => {
-            thread::spawn(|| bootstrap());
-        },
-        _ => return false,
-    };
-    true
+#[mem::dll_main]
+fn main() {
+    thread::spawn(move || {
+        match catch_unwind(init) {
+            Ok(ret) => {
+                if let Some(err) = ret.err() { log::error!("Failed to bootstrap. Error: {:?}", err); }
+            }
+            Err(err) => { log::error!("Failed to bootstrap. Error: {:?}", err); }
+        }
+    });
 }
