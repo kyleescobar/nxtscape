@@ -1,3 +1,5 @@
+import de.fayard.refreshVersions.core.FeatureFlag.LIBS
+
 plugins {
     // See https://jmfayard.github.io/refreshVersions
     id("de.fayard.refreshVersions") version "0.40.1"
@@ -5,6 +7,15 @@ plugins {
 
 rootProject.name = "nxtscape"
 
-refreshVersions {
-    enableBuildSrcLibs()
-}
+/**
+ * ===== CLIENT MODULES =====
+ */
+
+include(":client")
+include(":client:natives")
+
+/**
+ * ===== SERVER MODULES =====
+ */
+
+include(":server")
